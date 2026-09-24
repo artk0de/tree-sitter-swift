@@ -1,0 +1,103 @@
+name: Build Prebuilds
+
+# Builds N-API prebuilds of the committed 0.7.3 release-asset sources for the
+# six platforms TeaRAGs supports, then packs them into one npm tarball.
+# Nothing is published from here -- see PREBUILD.md for the publish steps.
+
+on:
+  push:
+    tags:
+      - 'v*-prebuild*'
+  workflow_dispatch:
+
+jobs:
+  prebuild:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            platform: darwin-arm64
+          - os: macos-15-intel
+            platform: darwin-x64
+          - os: ubuntu-24.04-arm
+            platform: linux-arm64
+          - os: ubuntu-latest
+            platform: linux-x64
+          - os: windows-latest
+            platform: win32-x64
+          - os: windows-11-arm
+            platform: win32-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - run: npm install --ignore-scripts
+      - run: npx prebuildify --napi --strip
+
+      - name: Check the prebuild landed under the expected platform
+        shell: bash
+        run: |
+          ls -l "prebuilds/${{ matrix.platform }}"
+          test -n "$(find "prebuilds/${{ matrix.platform }}" -name '*.node' -print -quit)"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prebuild-${{ matrix.platform }}
+          path: prebuilds/
+          if-no-files-found: error
+
+  pack:
+    needs: prebuild
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: prebuilds
+          pattern: prebuild-*
+          merge-multiple: true
+
+      - name: Assert all six prebuilds are present
+        run: |
+          find prebuilds -type f | sort
+          missing=0
+          for platform in darwin-arm64 darwin-x64 linux-arm64 linux-x64 win32-x64 win32-arm64; do
+            if [ -z "$(find "prebuilds/$platform" -name '*.node' -print -quit 2>/dev/null)" ]; then
+              echo "::error::missing prebuild for $platform"
+              missing=1
+            fi
+          done
+          exit $missing
+
+      - name: Pack
+        run: |
+          mkdir -p dist
+          npm pack --pack-destination dist
+          tgz=$(ls dist/*.tgz)
+          tar -tzf "$tgz" | grep -E '^package/prebuilds/.*\.node$'
+          echo "sha512 (hex): $(sha512sum "$tgz" | cut -d' ' -f1)"
+          echo "integrity:    sha512-$(openssl dgst -sha512 -binary "$tgz" | base64 -w0)"
+
+      - name: Stage per-platform release binaries
+        run: |
+          for dir in prebuilds/*/; do
+            platform=$(basename "$dir")
+            cp "$dir"/*.node "dist/tree-sitter-swift-$platform.node"
+          done
+          ls -l dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package
+          path: dist/
+          if-no-files-found: error

@@ -1,9 +1,12 @@
+# Upstream ignores the generated parser (src/parser.c, src/tree_sitter/,
+# grammar.json, node-types.json) because its main branch regenerates it.
+# This branch COMMITS the generated sources of the 0.7.3 release asset
+# (ABI 15), so those rules are dropped here -- see PREBUILD.md.
 node_modules
-/src/*
-!/src/scanner.c
-!/src/*.json
 *.swp
 /build
+/prebuilds
+*.tgz
 Cargo.lock
 /target/*
 *.a
