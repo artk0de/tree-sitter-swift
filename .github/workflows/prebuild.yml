@@ -37,7 +37,20 @@ jobs:
           node-version: 24
 
       - run: npm install --ignore-scripts
-      - run: npx prebuildify --napi --strip
+
+      - if: runner.os != 'Windows'
+        run: npx prebuildify --napi --strip
+
+      # prebuildify 6 spawns `node-gyp.cmd` without a shell, which Node >= 20.12
+      # rejects with `spawn EINVAL` (CVE-2024-27980). Run node-gyp directly and
+      # lay the binary out exactly as prebuildify names it; --strip is a no-op
+      # on Windows anyway.
+      - if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          npx node-gyp rebuild --release
+          mkdir -p "prebuilds/${{ matrix.platform }}"
+          cp build/Release/tree_sitter_swift_binding.node "prebuilds/${{ matrix.platform }}/@artk0de+tree-sitter-swift.node"
 
       - name: Check the prebuild landed under the expected platform
         shell: bash

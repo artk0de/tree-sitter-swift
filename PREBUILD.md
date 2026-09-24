@@ -52,6 +52,9 @@ runs `.github/workflows/prebuild.yml`:
    ubuntu-24.04-arm (linux-arm64), ubuntu-latest (linux-x64), windows-latest
    (win32-x64) and windows-11-arm (win32-arm64): `npm install --ignore-scripts`
    then `npx prebuildify --napi --strip`, uploaded as `prebuild-<platform>`.
+   On Windows, prebuildify 6 cannot spawn `node-gyp.cmd` under Node >= 20.12
+   (`spawn EINVAL`), so those jobs run `node-gyp rebuild --release` directly and
+   copy the binary to the path prebuildify would have used.
 2. `pack` — downloads all prebuilds, fails unless all six
    `prebuilds/<platform>/*.node` exist, runs `npm pack`, prints the tarball's
    sha512, and uploads the `.tgz` plus per-platform
