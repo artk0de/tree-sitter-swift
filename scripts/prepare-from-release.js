@@ -74,7 +74,8 @@ pkg.scripts = {
 };
 delete pkg.dependencies["tree-sitter-cli"];
 delete pkg.dependencies.which;
-pkg.devDependencies = { "node-gyp": "^10.0.1", prebuildify: "^6.0.0" };
+// node-gyp < 11 cannot find Visual Studio 2026 on current Windows runners.
+pkg.devDependencies = { "node-gyp": "^12.1.0", prebuildify: "^6.0.0" };
 // Upstream spells the meta key `tree_sitter`, so the peer it meant as optional
 // is enforced; the runtime this package is loaded by is `tree-sitter` 0.25.
 pkg.peerDependencies = { "tree-sitter": "^0.22.1 || ^0.25.0" };

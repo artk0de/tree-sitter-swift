@@ -30,7 +30,9 @@ no prebuilds and regenerates the parser during `node-gyp` builds, which needs
   `0.7.3-prebuild.1`, `repository`/`bugs`/`homepage` pointed at this fork.
   `tree-sitter-cli` and `which` removed from `dependencies`: only the parser
   generator needs them, and a consumer of prebuilds never generates. The
-  install script is just `node-gyp-build`. The `tree-sitter` peer is optional
+  install script is just `node-gyp-build`. `devDependencies` are only
+  `node-gyp` ^12 (older releases cannot find Visual Studio 2026 on current
+  Windows runners) and `prebuildify`. The `tree-sitter` peer is optional
   (upstream misspells the meta key as `tree_sitter`, so upstream enforces it).
 - `binding.gyp` — the `actions` block that runs `tree-sitter generate` on every
   native build is removed. The asset already carries the generated `src/`.
