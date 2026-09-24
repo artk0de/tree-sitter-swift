@@ -33,7 +33,10 @@ no prebuilds and regenerates the parser during `node-gyp` builds, which needs
   install script is just `node-gyp-build`. `devDependencies` are only
   `node-gyp` ^12 (older releases cannot find Visual Studio 2026 on current
   Windows runners) and `prebuildify`. The `tree-sitter` peer is optional
-  (upstream misspells the meta key as `tree_sitter`, so upstream enforces it).
+  (upstream misspells the meta key as `tree_sitter`, so upstream enforces it)
+  and its range adds `^0.25.1-prebuild.0`: `^0.25.0` excludes prereleases, so
+  npm rejects `tree-sitter@npm:@artk0de/tree-sitter@0.25.1-prebuild.N` with
+  `ERESOLVE` even though the peer is optional.
 - `binding.gyp` — the `actions` block that runs `tree-sitter generate` on every
   native build is removed. The asset already carries the generated `src/`.
 - `package-lock.json` — regenerated for the reduced dependency set.

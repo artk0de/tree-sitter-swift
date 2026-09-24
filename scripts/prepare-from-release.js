@@ -78,7 +78,9 @@ delete pkg.dependencies.which;
 pkg.devDependencies = { "node-gyp": "^12.1.0", prebuildify: "^6.0.0" };
 // Upstream spells the meta key `tree_sitter`, so the peer it meant as optional
 // is enforced; the runtime this package is loaded by is `tree-sitter` 0.25.
-pkg.peerDependencies = { "tree-sitter": "^0.22.1 || ^0.25.0" };
+// `^0.25.0` alone excludes prereleases, so npm refuses the peer when
+// `tree-sitter` is aliased to `@artk0de/tree-sitter@0.25.1-prebuild.N`.
+pkg.peerDependencies = { "tree-sitter": "^0.22.1 || ^0.25.0 || ^0.25.1-prebuild.0" };
 pkg.peerDependenciesMeta = { "tree-sitter": { optional: true } };
 pkg.publishConfig = { access: "public" };
 pkg.repository = { type: "git", url: "git+https://github.com/artk0de/tree-sitter-swift.git" };
